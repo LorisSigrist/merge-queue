@@ -1,5 +1,9 @@
 # Merge-Queue
 
+
+![Merge-Queue Minzipped Size](https://badgen.net/npm/v/merge-queue?icon=npm)
+![Github Checks](https://badgen.net/github/checks/LorisSigrist/merge-queue?icon=github)
+
 When you have a Series of Operations that need to happen, a Queue is often a great Data-Structure to choose.
 But, often certain operations can be merged together, if they happen after one another.
 
