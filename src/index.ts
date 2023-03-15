@@ -33,6 +33,10 @@ type Queue<OperationsMap> = {
     [OperationKey in keyof OperationsMap]: [OperationKey, OperationsMap[OperationKey]];
 }[Extract<keyof OperationsMap, string>][];
 
+type InitialQueue<OperationsMap> = {
+    [OperationKey in keyof OperationsMap]: [OperationKey, OperationsMap[OperationKey]];
+}[Extract<keyof OperationsMap, string>][];
+
 
 interface MergeQueueReturn<OperationsMap extends {} = any> {
     /** Adds an item to the queue */
@@ -59,7 +63,7 @@ interface MergeQueueReturn<OperationsMap extends {} = any> {
 }
 
 
-export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<OperationsMap> {
+export function MergeQueue<OperationsMap extends {} = any>(initial_data: InitialQueue<OperationsMap> = []): MergeQueueReturn<OperationsMap> {
 
     /*
         TS can be a bit of a pain to work with sometimes.
@@ -76,7 +80,7 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
      * The queue of operations. Stored oldest to newest.
      * New items are appended to the end
      */
-    let queue: Queue<OperationsMap> = [];
+    let queue: Queue<OperationsMap> = initial_data;
 
     type Merger = (a: any, b: any) => [string, any] | null;
 
