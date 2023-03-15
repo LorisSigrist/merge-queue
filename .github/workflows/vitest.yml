@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  vitest:
 
     runs-on: ubuntu-latest
 
