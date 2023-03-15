@@ -2,13 +2,14 @@ import { expect, it, describe } from "vitest";
 import { MergeQueue } from "../src/index";
 
 describe("CRUD Example", () => {
-
-    interface Person {
-        name: string;
-        age: number;
-    }
-
     it.concurrent("should add, update, and delete", () => {
+        
+        interface Person {
+            name: string;
+            age: number;
+        }
+
+
         const queue = MergeQueue<{
             add: Person;
             update: Partial<Person>,
@@ -19,7 +20,7 @@ describe("CRUD Example", () => {
         queue.addMergeRule("add", "update", (a, b) => ["add", { ...a, ...b }]);
         queue.addMergeRule("update", "add", (a, b) => ["add", { ...b }]);
         queue.addMergeRule("update", "update", (a, b) => ["update", { ...a, ...b }]);
-        
+
         queue.addMergeRule("add", "delete", (a, b) => ["delete", b]);
         queue.addMergeRule("update", "delete", (a, b) => ["delete", b]);
         queue.addMergeRule("delete", "delete", (a, b) => ["delete", b]);

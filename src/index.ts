@@ -35,15 +35,25 @@ type Queue<OperationsMap> = {
 
 
 interface MergeQueueReturn<OperationsMap extends {} = any> {
+    /** Adds an item to the queue */
     enqueue: Enqueue<OperationsMap>;
+    /** @returns the oldest item in the queue and removes it */
     dequeue: Dequeue<OperationsMap>;
+    /** Adds a merge rule between two operations*/
     addMergeRule: AddMergeRule<OperationsMap>;
+    /** Removes a merge rule */
     removeMergeRule: RemoveMergeRule<OperationsMap>;
+    /** Removes all active merge rules */
     clearMergeRules: () => void;
+    /** Removes all items from the queue */
     clear: () => void;
+    /** @returns A string representation of the queue */
     toString: () => string;
+    /** @returns An array representation of the queue. Equivalent to [...queue] */
     toArray: () => Queue<OperationsMap>;
+    /** @returns The first item in the queue, without removing it */
     peek: () => Queue<OperationsMap>[0];
+    /** The number of items currently in the queue */
     length: number;
     [Symbol.iterator]: () => IterableIterator<[Extract<keyof OperationsMap, string>, OperationsMap[Extract<keyof OperationsMap, string>]]>;
 }
@@ -76,7 +86,7 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
     function mergeAll() {
         let i = 0;
         while (i + 1 < queue.length) {
-            while(mergeAt(i)) {} //Keep merging until no more merges are possible at the current index
+            while (mergeAt(i)) { } //Keep merging until no more merges are possible at the current index
             i++; //Move to the next index
         }
     }
@@ -88,7 +98,7 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
      * @param index 
      * @returns - If a merge was performed
      */
-    function mergeAt(index: number) : boolean {
+    function mergeAt(index: number): boolean {
         if (queue.length < 2)
             return false; //Nothing to merge
 
@@ -120,7 +130,7 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
         const merged = mergeAt(queue.length - 2);
 
         //Try to keep merging, in case the new operation can be merged with the next one
-        if(merged) mergeAtTheEnd();
+        if (merged) mergeAtTheEnd();
     }
 
     /**
@@ -140,37 +150,20 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
         return data as any; //The type is correct, the compiler is just stupid
     }
 
-
-    /**
-     * Adds a merge rule between two operations.
-     * Whenever these two operations are queued in that order, the merger function will be called to merge them
-     * 
-     * @param operation_1 Which operation must be queued fist
-     * @param operation_2 Which operation must be queued second
-     * @param merger A function that returns a merged operation, or null if the operations cancel each other out
-     */
-    const addMergeRule: AddMergeRule<OperationsMap> = (operation_1, operation_2, merger) => {
-        if (!merge_rules[operation_1]) merge_rules[operation_1] = {};
-        merge_rules[operation_1][operation_2] = merger;
+    const addMergeRule: AddMergeRule<OperationsMap> = (leading_operation, following_operation, merger) => {
+        if (!merge_rules[leading_operation]) merge_rules[leading_operation] = {};
+        merge_rules[leading_operation][following_operation] = merger;
 
         mergeAll();
     }
 
-    /**
-     * Removes a merge rule between two operations
-     * 
-     * @param operation_1  The fist operation the rule was added for
-     * @param operation_2  The second operation the rule was added for
-     */
     const removeMergeRule: RemoveMergeRule<OperationsMap> = (operation_1: string, operation_2: string) => {
         if (!merge_rules[operation_1]) return;
         delete merge_rules[operation_1][operation_2];
     }
 
-    /**
-     * @returns An iterator for the queue from oldest to newest
-     */
     const iterator = () => queue[Symbol.iterator]();
+
 
     function clear() {
         queue = [];
@@ -188,10 +181,6 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
         merge_rules = {};
     }
 
-    /**
-     * Returns the next operation that will be dequeued, without removing it from the queue
-     * @returns 
-     */
     function peek() {
         return queue[0];
     }
@@ -207,7 +196,11 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
         clearMergeRules,
         peek,
         [Symbol.iterator]: iterator,
+
+        /** The current length of the queue */
         get length() { return queue.length; },
+
+        /** Cannot set the length of the queue */
         set length(value: number) { throw new Error("Cannot set length of queue"); }
     };
 }
