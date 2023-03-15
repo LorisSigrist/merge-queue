@@ -1,6 +1,4 @@
 # Merge-Queue
-
-
 ![Merge-Queue Minzipped Size](https://badgen.net/npm/v/merge-queue?icon=npm)
 ![Github Checks](https://badgen.net/github/checks/LorisSigrist/merge-queue?icon=github)
 
@@ -124,6 +122,24 @@ const [operation_2, data_2] = q.dequeue(); // ["operation_2", data_2]
 const [operation_3, data_3] = q.dequeue(); // ["operation_3", data_3]
 
 q.length; //0
+```
+
+
+### Loading and Saving the Queue
+```ts
+import { MergeQueue } from "merge-queue";
+
+const queue_1 = MergeQueue();
+
+queue_1.enqueue("operation_1", data_1);
+queue_1.enqueue("operation_2", data_2);
+
+
+//You can export the queue as an array
+console.log(queue_1.toArray()) // [ ["operation_1", data_1], ["operation_2", data_2] ]
+
+//You can initialize a new queue with the array
+const queue_2 = MergeQueue(queue_1.toArray());
 ```
 
 ### Operations that Cancel
