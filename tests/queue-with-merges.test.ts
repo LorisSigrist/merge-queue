@@ -36,15 +36,14 @@ describe('Queue With Merge Rules', () => {
 
     it('should allow operations to cancel each other out', () => {
         const queue = MergeQueue<{
-            a: number,
-            b: number,
-            c: number,
+            inc: number,
+            dec: number,
         }>();
 
-        queue.addMergeRule('a', 'b', (a, b) => null);
+        queue.addMergeRule('inc', 'dec', (a, b) => null);
 
-        queue.enqueue('a', 1);
-        queue.enqueue('b', 2);
+        queue.enqueue('inc', 1);
+        queue.enqueue('dec', 2);
 
         expect(queue.length).toBe(0);
     });
