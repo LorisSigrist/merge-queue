@@ -39,6 +39,11 @@ interface MergeQueueReturn<OperationsMap extends {} = any> {
     dequeue: Dequeue<OperationsMap>;
     addMergeRule: AddMergeRule<OperationsMap>;
     removeMergeRule: RemoveMergeRule<OperationsMap>;
+    clearMergeRules: () => void;
+    clear: () => void;
+    toString: () => string;
+    toArray: () => Queue<OperationsMap>;
+    length: number;
     [Symbol.iterator]: () => IterableIterator<[Extract<keyof OperationsMap, string>, OperationsMap[Extract<keyof OperationsMap, string>]]>;
 }
 
@@ -48,7 +53,7 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
     /*
         TS can be a bit of a pain to work with sometimes.
         Since the types here are extremely complex, I've decided to play it a bit fast and loose and 
-        use more generic types than are strictly allowed. (eg string instead of Extract<keyof OperationsMap, string>)
+        use more generic types than are technially allowed by the interface. (eg string instead of T extends Extract<keyof OperationsMap, string>)
 
         Otherwise 90% of this code would be type declarations.
 
@@ -60,17 +65,61 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
      * The queue of operations. Stored oldest to newest.
      * New items are appended to the end
      */
-    const queue: Queue<OperationsMap> = [];
+    let queue: Queue<OperationsMap> = [];
 
     type Merger = (a: any, b: any) => [string, any] | null;
 
-    const merge_rules: Record<string, Record<string, Merger>> = {};
+    let merge_rules: Record<string, Record<string, Merger>> = {};
 
-    function applyMergeRules() {
-        const merged_queue: Queue<OperationsMap> = [];
-        for(let i = 0; i + 1 < queue.length; i++) {
 
+    function mergeAll() {
+        let i = 0;
+        while (i + 1 < queue.length) {
+            while(mergeAt(i)) {} //Keep merging until no more merges are possible at the current index
+            i++; //Move to the next index
         }
+    }
+
+    /**
+     * Attempts to merge the operation at the given index with the next one,
+     * using the merge rules.
+     * 
+     * @param index 
+     * @returns - If a merge was performed
+     */
+    function mergeAt(index: number) : boolean {
+        if (queue.length < 2)
+            return false; //Nothing to merge
+
+        const [operation_1, data_1] = queue[index];
+        const [operation_2, data_2] = queue[index + 1];
+
+        if (!merge_rules[operation_1] || !merge_rules[operation_1][operation_2]) {
+            return false;
+        }
+
+        const merger = merge_rules[operation_1][operation_2];
+        const merged = merger(data_1, data_2);
+
+        if (!merged) {
+            //If the merger returns null, 
+            //the operations cancel each other out and should both be removed
+            queue.splice(index, 2);
+        } else {
+            //If the merger returns a value,
+            //The two operations that got merged should be removed
+            //and the merged operation should be inserted at the same location
+            queue.splice(index, 2, merged as any);
+        }
+
+        return true;
+    }
+
+    function mergeAtTheEnd() {
+        const merged = mergeAt(queue.length - 2);
+
+        //Try to keep merging, in case the new operation can be merged with the next one
+        if(merged) mergeAtTheEnd();
     }
 
     /**
@@ -81,7 +130,7 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
      */
     const enqueue: Enqueue<OperationsMap> = (operation, data) => {
         queue.push([operation, data]);
-        applyMergeRules();
+        mergeAtTheEnd();
     }
 
     const dequeue: Dequeue<OperationsMap> = () => {
@@ -102,6 +151,8 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
     const addMergeRule: AddMergeRule<OperationsMap> = (operation_1, operation_2, merger) => {
         if (!merge_rules[operation_1]) merge_rules[operation_1] = {};
         merge_rules[operation_1][operation_2] = merger;
+
+        mergeAll();
     }
 
     /**
@@ -120,11 +171,40 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
      */
     const iterator = () => queue[Symbol.iterator]();
 
-    return { 
-        enqueue, 
-        dequeue, 
-        addMergeRule, 
-        removeMergeRule, 
-        [Symbol.iterator]: iterator 
+    function clear() {
+        queue = [];
+    }
+
+    function toArray() {
+        return [...queue];
+    }
+
+    function toString() {
+        return queue.map(([operation, data]) => `${operation}: ${JSON.stringify(data)}`).join("\n");
+    }
+
+    function clearMergeRules() {
+        merge_rules = {};
+    }
+
+    return {
+        enqueue,
+        dequeue,
+        addMergeRule,
+        removeMergeRule,
+        clear,
+        toArray,
+        toString,
+        clearMergeRules,
+        [Symbol.iterator]: iterator,
+
+
+        get length() {
+            return queue.length;
+        },
+
+        set length(value: number) {
+            throw new Error("Cannot set length of queue");
+        }
     };
 }
