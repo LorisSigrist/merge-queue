@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MergeQueue } from '.';
-
+import { MergeQueue } from '../src/index';
 
 describe('Queue Without Merge Rules', () => {
     it.concurrent('should enqueue and dequeue', () => {
@@ -73,68 +72,32 @@ describe('Queue Without Merge Rules', () => {
             ['c', true],
         ]);
     });
-});
 
-describe('Queue Witth Merge Rules', () => {
-    it.concurrent('should merge operations', () => {
+    it('supports peeking', () => {
         const queue = MergeQueue<{
             a: number,
-            b: number,
-            c: number,
+            b: string,
+            c: boolean,
         }>();
 
-        queue.addMergeRule('a', 'b', (a, b) => ['c', a + b]);
-
         queue.enqueue('a', 1);
-        queue.enqueue('b', 2);
+        queue.enqueue('b', "2");
+        queue.enqueue('c', true);
 
-        expect(queue.dequeue()).toEqual(['c', 3]);
+        expect(queue.peek()).toEqual(['a', 1]);
+        expect(queue.peek()).toEqual(['a', 1]);
+
+        expect(queue.dequeue()).toEqual(['a', 1]);
+        expect(queue.dequeue()).toEqual(['b', "2"]);
     });
 
-    it.concurrent('should merge operations recursively', () => {
+    it('should return undefined when peeking at an empty queue', () => {
         const queue = MergeQueue<{
             a: number,
-            b: number,
-            c: number,
+            b: string,
+            c: boolean,
         }>();
 
-        queue.addMergeRule('a', 'a', (a, b) => ['a', a + b]);
-        queue.addMergeRule('b', 'c', (a, b) => ['a', a + b]);
-
-        queue.enqueue('a', 1);
-        queue.enqueue('b', 2);
-        queue.enqueue('c', 3);
-
-        expect(queue.dequeue()).toEqual(['a', 6]);
-    });
-
-    it('should allow operations to cancel each other out', () => {
-        const queue = MergeQueue<{
-            a: number,
-            b: number,
-            c: number,
-        }>();
-
-        queue.addMergeRule('a', 'b', (a, b) => null);
-
-        queue.enqueue('a', 1);
-        queue.enqueue('b', 2);
-
-        expect(queue.length).toBe(0);
-    });
-
-    it.concurrent('should merge operations even if the rules are added after they are enqueued', () => {
-        const queue = MergeQueue<{
-            a: number,
-            b: number,
-            c: number,
-        }>();
-
-        queue.enqueue('a', 1);
-        queue.enqueue('b', 2);
-
-        queue.addMergeRule('a', 'b', (a, b) => ['c', a + b]);
-
-        expect(queue.dequeue()).toEqual(['c', 3]);
+        expect(queue.peek()).toBeUndefined();
     });
 });

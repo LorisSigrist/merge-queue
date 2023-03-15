@@ -43,6 +43,7 @@ interface MergeQueueReturn<OperationsMap extends {} = any> {
     clear: () => void;
     toString: () => string;
     toArray: () => Queue<OperationsMap>;
+    peek: () => Queue<OperationsMap>[0];
     length: number;
     [Symbol.iterator]: () => IterableIterator<[Extract<keyof OperationsMap, string>, OperationsMap[Extract<keyof OperationsMap, string>]]>;
 }
@@ -187,6 +188,14 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
         merge_rules = {};
     }
 
+    /**
+     * Returns the next operation that will be dequeued, without removing it from the queue
+     * @returns 
+     */
+    function peek() {
+        return queue[0];
+    }
+
     return {
         enqueue,
         dequeue,
@@ -196,15 +205,9 @@ export function MergeQueue<OperationsMap extends {} = any>(): MergeQueueReturn<O
         toArray,
         toString,
         clearMergeRules,
+        peek,
         [Symbol.iterator]: iterator,
-
-
-        get length() {
-            return queue.length;
-        },
-
-        set length(value: number) {
-            throw new Error("Cannot set length of queue");
-        }
+        get length() { return queue.length; },
+        set length(value: number) { throw new Error("Cannot set length of queue"); }
     };
 }
