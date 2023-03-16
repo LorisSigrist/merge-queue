@@ -1,14 +1,20 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { MergeQueue } from '../src/index';
 
 describe('Queue Without Merge Rules', () => {
-    it.concurrent('should enqueue and dequeue', () => {
-        const queue = MergeQueue<{
-            a: number,
-            b: string,
-            c: boolean,
-        }>();
+    interface Operations {
+        a: number;
+        b: string;
+        c: boolean;
+    }
 
+    let queue: ReturnType<typeof MergeQueue<Operations>>;
+    beforeEach(() => {
+        queue = MergeQueue<Operations>();
+    });
+
+
+    it.concurrent('should enqueue and dequeue', () => {
         queue.enqueue('a', 1);
         queue.enqueue('b', "2");
         queue.enqueue('c', true);
@@ -23,22 +29,10 @@ describe('Queue Without Merge Rules', () => {
     });
 
     it.concurrent('should throw when dequeueing an empty queue', () => {
-        const queue = MergeQueue<{
-            a: number,
-            b: string,
-            c: boolean,
-        }>();
-
         expect(() => queue.dequeue()).toThrow();
     });
 
     it.concurrent("should be iterable (spred operator)", () => {
-        const queue = MergeQueue<{
-            a: number,
-            b: string,
-            c: boolean,
-        }>();
-
         queue.enqueue('a', 1);
         queue.enqueue('b', "2");
         queue.enqueue('c', true);
@@ -51,12 +45,6 @@ describe('Queue Without Merge Rules', () => {
     });
 
     it.concurrent("should be iterable (for of)", () => {
-        const queue = MergeQueue<{
-            a: number,
-            b: string,
-            c: boolean,
-        }>();
-
         queue.enqueue('a', 1);
         queue.enqueue('b', "2");
         queue.enqueue('c', true);
@@ -74,12 +62,6 @@ describe('Queue Without Merge Rules', () => {
     });
 
     it('supports peeking', () => {
-        const queue = MergeQueue<{
-            a: number,
-            b: string,
-            c: boolean,
-        }>();
-
         queue.enqueue('a', 1);
         queue.enqueue('b', "2");
         queue.enqueue('c', true);
@@ -92,12 +74,6 @@ describe('Queue Without Merge Rules', () => {
     });
 
     it('should return undefined when peeking at an empty queue', () => {
-        const queue = MergeQueue<{
-            a: number,
-            b: string,
-            c: boolean,
-        }>();
-
         expect(queue.peek()).toBeUndefined();
     });
 });
