@@ -151,10 +151,31 @@ const q = MergeQueue<{ increment: never; decrement: never }>();
 
 //Returning null in the Merge Function means that the operations cancel each other out. They are both removed
 q.addMergeRule("increment", "decrement", () => null);
-a.addMergeRule("decrement", "increment", () => null);
+q.addMergeRule("decrement", "increment", () => null);
 
 q.enqueue("increment", 1);
 q.enqueue("decrement", 1);
 
 q.length; //0
 ```
+
+
+### Wildcard Rules
+You can use the wildcard `*` to match any operation.
+```ts
+q.addMergeRule("*", "*", (a, b) => {
+  return ["a", a + b];
+});
+
+q.enqueue("a", 1);
+q.enqueue("b", 2);
+
+console.log(q.dequeue()); // ["a", 3]
+```
+
+In case the rules are ambiguous, the disambiguation is done in the following order:
+
+1. `a, b`
+2. `a, *`
+3. `*, b`
+4. `*, *`
