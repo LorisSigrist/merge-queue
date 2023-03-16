@@ -1,3 +1,7 @@
+type WithWildcard<Map extends {}> = Map & {
+    '*': Map[Extract<keyof Map, string>];
+};
+
 type Enqueue<OperationsMap extends {} = any>
     = <OperationKey extends Extract<keyof OperationsMap, string>>
         (operation: OperationKey, data: OperationsMap[OperationKey])
@@ -9,21 +13,21 @@ type Dequeue<OperationsMap extends {} = any>
 
 
 type AddMergeRule<OperationsMap extends {} = any> = <
-    OperationKey_1 extends Extract<keyof OperationsMap, string>,
-    OperationKey_2 extends Extract<keyof OperationsMap, string>,
+    OperationKey_1 extends Extract<keyof WithWildcard<OperationsMap>, string>,
+    OperationKey_2 extends Extract<keyof WithWildcard<OperationsMap>, string>,
     OperationKey_3 extends Extract<keyof OperationsMap, string>,
 >(
     operation_1: OperationKey_1,
     operation_2: OperationKey_2,
     merger: (
-        a: OperationsMap[OperationKey_1],
-        b: OperationsMap[OperationKey_2])
+        a: WithWildcard<OperationsMap>[OperationKey_1],
+        b: WithWildcard<OperationsMap>[OperationKey_2])
         => [OperationKey_3, OperationsMap[OperationKey_3]] | null
 ) => void;
 
 type RemoveMergeRule<OperationsMap extends {} = any> = <
-    OperationKey_1 extends Extract<keyof OperationsMap, string>,
-    OperationKey_2 extends Extract<keyof OperationsMap, string>,
+    OperationKey_1 extends Extract<keyof WithWildcard<OperationsMap>, string>,
+    OperationKey_2 extends Extract<keyof WithWildcard<OperationsMap>, string>,
 >(
     operation_1: OperationKey_1,
     operation_2: OperationKey_2,
@@ -95,6 +99,26 @@ export function MergeQueue<OperationsMap extends {} = any>(initial_data: Initial
         }
     }
 
+    function getMerger(leading: string, trailing: string) : Merger | null {
+        if(merge_rules[leading] && merge_rules[leading][trailing]){
+            return merge_rules[leading][trailing];
+        }
+
+        if(merge_rules[leading] && merge_rules[leading]['*']){
+            return merge_rules[leading]['*'];
+        }
+
+        if(merge_rules['*'] && merge_rules['*'][trailing]){
+            return merge_rules['*'][trailing];
+        }
+
+        if(merge_rules['*'] && merge_rules['*']['*']){
+            return merge_rules['*']['*'];
+        }
+
+        return null;
+    }
+
     /**
      * Attempts to merge the operation at the given index with the next one,
      * using the merge rules.
@@ -109,11 +133,9 @@ export function MergeQueue<OperationsMap extends {} = any>(initial_data: Initial
         const [operation_1, data_1] = queue[index];
         const [operation_2, data_2] = queue[index + 1];
 
-        if (!merge_rules[operation_1] || !merge_rules[operation_1][operation_2]) {
-            return false;
-        }
+        const merger = getMerger(operation_1, operation_2);
+        if(!merger) return false;
 
-        const merger = merge_rules[operation_1][operation_2];
         const merged = merger(data_1, data_2);
 
         if (!merged) {
