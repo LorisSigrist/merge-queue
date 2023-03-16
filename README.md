@@ -151,7 +151,7 @@ const q = MergeQueue<{ increment: never; decrement: never }>();
 
 //Returning null in the Merge Function means that the operations cancel each other out. They are both removed
 q.addMergeRule("increment", "decrement", () => null);
-a.addMergeRule("decrement", "increment", () => null);
+q.addMergeRule("decrement", "increment", () => null);
 
 q.enqueue("increment", 1);
 q.enqueue("decrement", 1);
