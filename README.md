@@ -173,7 +173,7 @@ q.enqueue("b", 2);
 console.log(q.dequeue()); // ["a", 3]
 ```
 
-In case the rules are ambiguous, the disambiguation is done in the following order:
+In case the rules are ambiguous, the tie-break is done as follows:
 
 1. `a, b`
 2. `a, *`
