@@ -13,7 +13,7 @@ interface Operations {
 }
 
 
-describe("Difficult Example", () => {
+describe("Complex CRUD Example", () => {
     let q: ReturnType<typeof MergeQueue<Operations>>
 
     beforeEach(() => {
